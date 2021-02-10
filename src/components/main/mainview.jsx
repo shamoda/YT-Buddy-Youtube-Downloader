@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/lines-between-class-members */
 /* eslint-disable react/sort-comp */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable react/destructuring-assignment */
@@ -10,110 +11,118 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import ytdl from 'ytdl-core';
-import server from '../../server/server';
+
+
+    // https://www.youtube.com/watch?v=a3ICNMQW7Ok
 
 
 class Mainview extends Component {
 
+  // class variables
+  video;
+  validUrl = false;
+  output = path.resolve(__dirname, 'video.mp4');
+
+  // initializing constructor
   constructor(props) {
     super(props);
     this.state = {
-      urlTxt:'',
+      urlTxt:'abc',
       progress:'',
       estTime:'',
       downloadedSize:'',
       totalSize:''
     }
-
-    this.btnClick = this.btnClick.bind(this);
   }
 
+  // listening to onChange event of URL input field
   inputChange = event =>{
+
     this.setState({
         [event.target.name] : event.target.value
     });
 
-    // if(event.target.value  Check is this valid or not)
-    // {
-    //   video = ytdl(this.state.urlTxt, { format: 'mp4' });
-    // }
-
-    console.log(event.target.value)
-
+    // validating the url
+    if(ytdl.validateURL(event.target.value))
+    {
+      // setting validUrl true
+      this.validUrl = true
+      // creating readable stream
+      this.video = ytdl(event.target.value, { format: 'mp4' });
+      console.log('Valid URL')
+    }
+    else{
+      console.log('Invalid URL')
+    }
   };
 
 
-  output = path.resolve(__dirname, 'video.mp4');
-  
-  video = ytdl(this.state.urlTxt, { format: 'mp4' });
 
+  downloadVideo(){
 
+    if(this.validUrl){
+      // local variable to store download start time
+      let starttime;
 
-  stop(btn) {
-    console.log(btn)
-    if(this.video.isPaused){
-      this.video.resume();
+      // writting the file from readable stream to file system
+      this.video.pipe(fs.createWriteStream(this.output));
+
+      // this will fire when downloading started
+      this.video.once('response', () => {
+        starttime = Date.now();
+      });
+
+      // getting progress of the downloading video
+      this.video.on('progress', (chunckLength, downloaded, total) => {
+        const percent = downloaded / total;
+        const downloadedMinutes = (Date.now() - starttime) / 1000 / 60;
+        const estimatedDownloadTime = (downloadedMinutes / percent) - downloadedMinutes;
+
+        // updating the state according to the progress
+        this.setState({
+          progress: (percent * 100).toFixed(2),
+          estTime: estimatedDownloadTime.toFixed(2),
+          downloadedSize: (downloaded / 1024 / 1024).toFixed(2),
+          totalSize: (total / 1024 / 1024).toFixed(2)
+        });
+
+        // writting progress data on console
+        readline.cursorTo(process.stdout, 0);
+        process.stdout.write(`${(percent * 100).toFixed(2)}% downloaded `);
+        process.stdout.write(`(${(downloaded / 1024 / 1024).toFixed(2)}MB of ${(total / 1024 / 1024).toFixed(2)}MB)\n`);
+        process.stdout.write(`running for: ${downloadedMinutes.toFixed(2)}minutes`);
+        process.stdout.write(`, estimated time left: ${estimatedDownloadTime.toFixed(2)}minutes `);
+        readline.moveCursor(process.stdout, 0, -1);
+      });
+
+      // this will fire when downloading is finished
+      this.video.on('end', () => {
+        alert('Downloaded succefully')
+      });
     }
+  }
 
-    this.video.destroy();
+  stopDownloading() {
 
+    if(this.validUrl){
+      // destroying readable stream
+      this.video.destroy();
+
+      // deleting partially downloaded file from the downloaded location
       if (fs.existsSync(this.output)) {
         fs.unlink(this.output, (err) => {
             if (err) {
-                alert("An error ocurred updating the file" + err.message);
+                alert("An error ocurred while downloading the file" + err.message);
                 console.log(err);
                 return;
             }
             console.log("File succesfully deleted");
         });
-      }else{
-        alert("This file doesn't exist, cannot delete");
       }
-  }
-
-
-
-  btnClick(btn){
-    console.log(btn)
-
-    let starttime;
-
-      this.video.pipe(fs.createWriteStream(this.output));
-
-       this.video.once('response', () => {
-        starttime = Date.now();
-      });
-
-
-          this.video.on('progress', (chunckLength, downloaded, total) => {
-          const percent = downloaded / total;
-          const downloadedMinutes = (Date.now() - starttime) / 1000 / 60;
-          const estimatedDownloadTime = (downloadedMinutes / percent) - downloadedMinutes;
-          this.setState({
-            progress: (percent * 100).toFixed(2),
-            estTime: estimatedDownloadTime.toFixed(2),
-            downloadedSize: (downloaded / 1024 / 1024).toFixed(2),
-            totalSize: (total / 1024 / 1024).toFixed(2)
-          });
-          readline.cursorTo(process.stdout, 0);
-          process.stdout.write(`${(percent * 100).toFixed(2)}% downloaded `);
-          process.stdout.write(`(${(downloaded / 1024 / 1024).toFixed(2)}MB of ${(total / 1024 / 1024).toFixed(2)}MB)\n`);
-          process.stdout.write(`running for: ${downloadedMinutes.toFixed(2)}minutes`);
-          process.stdout.write(`, estimated time left: ${estimatedDownloadTime.toFixed(2)}minutes `);
-          readline.moveCursor(process.stdout, 0, -1);
-        });
-
-
-      this.video.on('end', () => {
-        alert('Downloaded succefully')
-      });
-
-
-    // let video = ytdl(this.state.urlTxt.id,{format: 'mp4'});
-    // video.pipe(fs.createWriteStream('video.mp4'));
-
-    // ytdl(this.state.urlTxt, {format: 'mp4'}).pipe(fs.createWriteStream('video.mp4'));
-    // https://www.youtube.com/watch?v=a3ICNMQW7Ok
+      else{
+        alert("Downloading stoped. Please wait.");
+      }
+    }
   }
 
 
@@ -122,11 +131,8 @@ class Mainview extends Component {
     return (
       <div>
         <input className="url" type="text" placeholder="Enter URL" onChange={this.inputChange} name="urlTxt" value={this.state.urlTxt} /> &nbsp;
-        <button className="paste" type="button" variant="outline-primary" onClick={() => this.btnClick('download')}>Download</button>
-        <button className="paste" type="button" variant="outline-primary" onClick={() => this.pause('pause')}>Pause</button>
-        <button className="paste" type="button" variant="outline-primary" onClick={() => this.resume('resume')}>Resume</button>
-        <button className="paste" type="button" variant="outline-primary" onClick={() => this.stop('stop')}>Stop</button>
-        <button className="paste" type="button" variant="outline-primary" onClick={() => this.btnClick('msg')}>Msg</button>
+        <button className="paste" type="button" variant="outline-primary" onClick={() => this.downloadVideo()}>Download</button>
+        <button className="paste" type="button" variant="outline-primary" onClick={() => this.stopDownloading()}>Stop</button>
         {this.state.progress && <p>{this.state.progress}% downloaded ({this.state.downloadedSize}MB of {this.state.totalSize}MB)</p>}
         {this.state.estTime && <p>Estimated time: {this.state.estTime} Minutes</p>}
       </div>
