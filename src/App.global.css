@@ -17,7 +17,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
+} */
 
 button {
   background-color: white;
@@ -40,19 +40,63 @@ li {
   list-style: none;
 }
 
-a {
+/* a {
   text-decoration: none;
-}
+} */
 
-a:hover {
+/* a:hover {
   opacity: 1;
   text-decoration: none;
   cursor: pointer;
-}
+} */
 
-.Hello {
+/* .Hello {
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 20px 0;
 } */
+
+
+/*
+*
+* my css classes
+*
+*/
+
+
+.url {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 200px;
+  height: 26px;
+  background: transparent;
+}
+
+.url:focus {
+  outline: none;
+}
+
+.fileFormat {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 100px;
+  height: 28px;
+  background: transparent;
+}
+
+.fileFormat:focus {
+  outline: none;
+}
+
+.btnDownload {
+  margin-left: 2000px;
+  margin-right: 2000px;
+}
+

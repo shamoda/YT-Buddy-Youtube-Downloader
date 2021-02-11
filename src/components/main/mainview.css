@@ -1,0 +1,21 @@
+.url {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  width: 4000px im !important;
+  height: 35px;
+}
+
+.url:focus {
+  outline: none;
+}
+
+.paste:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.test {
+  color: yellow;
+  font-size: 1000em;
+}
