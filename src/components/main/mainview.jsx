@@ -1,3 +1,8 @@
+/* eslint-disable eqeqeq */
+/* eslint-disable prefer-template */
+/* eslint-disable no-console */
+/* eslint-disable no-alert */
+/* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable @typescript-eslint/lines-between-class-members */
 /* eslint-disable react/sort-comp */
 /* eslint-disable class-methods-use-this */
@@ -11,11 +16,11 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import ytdl from 'ytdl-core';
-import { Button, Card, FormControl, InputLabel, MenuItem, Select, TextField } from '@material-ui/core';
-import { Form, Image } from 'react-bootstrap';
+import { Button, Card, CardActions, IconButton, LinearProgress, Snackbar } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
+import { Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faEdit } from '@fortawesome/free-solid-svg-icons';
-import logo from '../../assets/logo.png'
+import { faDownload, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import '../../App.global.css'
 import service from './service'
 
@@ -29,18 +34,32 @@ class Mainview extends Component {
   // class variables
   video;
   validUrl = false;
-  output = path.resolve(__dirname, 'video.mp4');
+  isDownloading = false;
+  snack = false;
+  output = path.resolve(__dirname, 'video.mp3');
 
   // initializing constructor
   constructor(props) {
     super(props);
     this.state = {
       urlTxt:'',
-      progress:'',
-      estTime:'',
-      downloadedSize:'',
-      totalSize:''
+      format:'',
+      progress:0,
+      estTime: 0,
+      downloadedSize: 0,
+      totalSize: 0
     }
+  }
+
+  downloadInitialState() {
+    this.setState({
+      urlTxt:'',
+      format:'',
+      progress: 0,
+      estTime: 0,
+      downloadedSize: 0,
+      totalSize: 0
+    });
   }
 
   // listening to onChange event of URL input field
@@ -50,13 +69,15 @@ class Mainview extends Component {
         [event.target.name] : event.target.value
     });
 
+    console.log(this.state.format)
+
     // validating the url
     if(ytdl.validateURL(event.target.value))
     {
       // setting validUrl true
       this.validUrl = true
       // creating readable stream
-      this.video = ytdl(event.target.value, { format: 'mp4' });
+      this.video = ytdl(event.target.value, { format: 'mp3' });
       console.log('Valid URL')
       service.getFormats(event.target.value)
     }
@@ -64,7 +85,6 @@ class Mainview extends Component {
       console.log('Invalid URL')
     }
   };
-
 
 
   downloadVideo(){
@@ -79,6 +99,7 @@ class Mainview extends Component {
       // this will fire when downloading started
       this.video.once('response', () => {
         starttime = Date.now();
+        this.isDownloading = true;
       });
 
       // getting progress of the downloading video
@@ -106,7 +127,12 @@ class Mainview extends Component {
 
       // this will fire when downloading is finished
       this.video.on('end', () => {
-        alert('Downloaded succefully')
+        this.isDownloading = false
+        if(this.state.progress == 100){
+          this.snack = true
+        }
+        this.downloadInitialState()
+        this.snack = false
       });
     }
   }
@@ -129,7 +155,7 @@ class Mainview extends Component {
         });
       }
       else{
-        alert("Downloading stoped. Please wait.");
+        alert("downloading already terminated");
       }
     }
   }
@@ -139,23 +165,39 @@ class Mainview extends Component {
   render() {
     return (
       <div>
-        <Card style={{ padding: "10px", background: "", display: "flex", alignContent: "center", alignItems: "center" }}>
-          <Image src={logo} width="82px" height="33px" style={{ padding: "10px" }} />
+        <Card>
+          <div style={{ padding: "10px", background: "", display: "flex", alignContent: "center", alignItems: "center" }}>
+            {/* <Image src={logo} width="82px" height="33px" style={{ padding: "10px" }} /> */}
 
-          <div style={{ textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
-            <input className="url" type="text"  placeholder="Paste URL Here" onChange={this.inputChange} name="urlTxt" value={this.state.urlTxt} /> &nbsp;
-            <Button variant="contained" size="small" type="button" style={{ color:"white", background:"green" }} > <FontAwesomeIcon icon={faEdit} />&nbsp; Paste</Button> &nbsp;
-            <Form.Control className="fileFormat" as="select" placeholder="Select Format" name="format" required >
-              {/* {this.state.optionList} */}
-              <option>mp3</option>
-              <option>mp4</option>
-            </Form.Control>
-            <Button className="btnDownload" variant="contained" color="primary" size="small" type="button" onClick={() => this.downloadVideo()}> <FontAwesomeIcon icon={faDownload} />&nbsp; Download</Button>
-            {/* <button className="paste" type="button" variant="outline-primary" onClick={() => this.stopDownloading()}>Stop</button> */}
-            {this.state.progress && <p>{this.state.progress}% downloaded ({this.state.downloadedSize}MB of {this.state.totalSize}MB)</p>}
-            {this.state.estTime && <p>Estimated time: {this.state.estTime} Minutes</p>}
+            <div style={{ textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
+              <input className="url" type="text"  placeholder="Paste URL Here" onChange={this.inputChange} name="urlTxt" value={this.state.urlTxt} /> &nbsp;
+              <Button className="btnDownload" variant="contained" size="small" type="button" style={{ color:"white", background:"green" }} > <FontAwesomeIcon icon={faEdit} />&nbsp; Paste</Button> &nbsp;
+              <Form.Control className="fileFormat" as="select" defaultValue="" placeholder="Select Format" onChange={this.inputChange} name="format" required >
+                {/* {this.state.optionList} */}
+                <option value="" disabled hidden>- format -</option>
+                <option value="mp3">.mp3</option>
+                <option value="mp4">.mp4</option>
+              </Form.Control>
+              <Button className="btnDownload" variant="contained" color="primary" size="small" type="button" onClick={() => this.downloadVideo()}> <FontAwesomeIcon icon={faDownload} />&nbsp; Download</Button> &nbsp;
+            </div>
           </div>
+
+          {this.isDownloading &&
+          <CardActions style={{ textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
+            <p className="progress">Downloading {this.state.downloadedSize}MB/{this.state.totalSize}MB</p>
+
+            <LinearProgress variant="determinate" color="secondary" style={{ width: "500px" }} value={parseFloat(this.state.progress)} />
+            <p className="progress">{this.state.progress}%</p><p className="progress">Time Remaining {this.state.estTime} Mins</p>
+            <IconButton className="btnDownload" variant="contained" color="secondary" size="small" type="button" onClick={() => this.stopDownloading()}> <FontAwesomeIcon icon={faTrash} /></IconButton>
+          </CardActions>
+          }
         </Card>
+
+        <Snackbar open={this.snack} autoHideDuration={6000} onClose={() => this.downloadInitialState()}>
+          <Alert onClose={() => this.downloadInitialState()} severity="success">
+            Downloaded Completed
+          </Alert>
+        </Snackbar>
 
       </div>
     );
