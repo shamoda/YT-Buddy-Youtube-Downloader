@@ -1,3 +1,4 @@
+/* eslint-disable func-names */
 /* eslint-disable eqeqeq */
 /* eslint-disable prefer-template */
 /* eslint-disable no-console */
@@ -22,9 +23,8 @@ import { Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import '../../App.global.css'
-import service from './service'
 
-
+    // download button progress 
 
     // https://www.youtube.com/watch?v=a3ICNMQW7Ok
 
@@ -33,10 +33,10 @@ class Mainview extends Component {
 
   // class variables
   video;
+  output;
   validUrl = false;
   isDownloading = false;
   snack = false;
-  output = path.resolve(__dirname, 'video.mp3');
 
   // initializing constructor
   constructor(props) {
@@ -44,6 +44,8 @@ class Mainview extends Component {
     this.state = {
       urlTxt:'',
       format:'',
+      disableFormat: true,
+      disableDownload: true,
       progress:0,
       estTime: 0,
       downloadedSize: 0,
@@ -55,36 +57,49 @@ class Mainview extends Component {
     this.setState({
       urlTxt:'',
       format:'',
+      disableFormat: true,
+      disableDownload: true,
       progress: 0,
       estTime: 0,
       downloadedSize: 0,
       totalSize: 0
     });
+    this.video = null;
   }
 
   // listening to onChange event of URL input field
   inputChange = event =>{
-
     this.setState({
         [event.target.name] : event.target.value
+    }, function() {
+      this.validateInputs()
     });
+  };
 
-    console.log(this.state.format)
-
+  validateInputs() {
     // validating the url
-    if(ytdl.validateURL(event.target.value))
+    if(ytdl.validateURL(this.state.urlTxt))
     {
+      this.setState({
+        disableFormat: false
+      })
+      if(this.state.format != '') {
+        this.setState({
+          disableDownload: false
+        })
+      }
       // setting validUrl true
       this.validUrl = true
+      this.output = path.resolve(__dirname, 'video.'+this.state.format);
       // creating readable stream
-      this.video = ytdl(event.target.value, { format: 'mp3' });
+      this.video = ytdl(this.state.urlTxt, { format: this.state.format });
       console.log('Valid URL')
-      service.getFormats(event.target.value)
     }
     else{
       console.log('Invalid URL')
+      this.downloadInitialState()
     }
-  };
+  }
 
 
   downloadVideo(){
@@ -142,7 +157,6 @@ class Mainview extends Component {
     if(this.validUrl){
       // destroying readable stream
       this.video.destroy();
-
       // deleting partially downloaded file from the downloaded location
       if (fs.existsSync(this.output)) {
         fs.unlink(this.output, (err) => {
@@ -172,13 +186,13 @@ class Mainview extends Component {
             <div style={{ textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
               <input className="url" type="text"  placeholder="Paste URL Here" onChange={this.inputChange} name="urlTxt" value={this.state.urlTxt} /> &nbsp;
               <Button className="btnDownload" variant="contained" size="small" type="button" style={{ color:"white", background:"green" }} > <FontAwesomeIcon icon={faEdit} />&nbsp; Paste</Button> &nbsp;
-              <Form.Control className="fileFormat" as="select" defaultValue="" placeholder="Select Format" onChange={this.inputChange} name="format" required >
+              <Form.Control className="fileFormat" as="select" placeholder="Select Format" value={this.state.format} onChange={this.inputChange} name="format" disabled={this.state.disableFormat} >
                 {/* {this.state.optionList} */}
                 <option value="" disabled hidden>- format -</option>
                 <option value="mp3">.mp3</option>
                 <option value="mp4">.mp4</option>
               </Form.Control>
-              <Button className="btnDownload" variant="contained" color="primary" size="small" type="button" onClick={() => this.downloadVideo()}> <FontAwesomeIcon icon={faDownload} />&nbsp; Download</Button> &nbsp;
+              <Button className="btnDownload" variant="contained" color="primary" size="small" type="button" onClick={() => this.downloadVideo()} disabled={this.state.disableDownload} > <FontAwesomeIcon icon={faDownload} />&nbsp; Download</Button> &nbsp;
             </div>
           </div>
 
