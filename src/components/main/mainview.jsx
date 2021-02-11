@@ -17,14 +17,14 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import ytdl from 'ytdl-core';
-import { Button, Card, CardActions, IconButton, LinearProgress, Snackbar } from '@material-ui/core';
+import { Button, Card, CardActions, CircularProgress, IconButton, LinearProgress, Snackbar } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 import { Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import '../../App.global.css'
 
-    // download button progress 
+    // added functionalities to the paste button
 
     // https://www.youtube.com/watch?v=a3ICNMQW7Ok
 
@@ -35,7 +35,6 @@ class Mainview extends Component {
   video;
   output;
   validUrl = false;
-  isDownloading = false;
   snack = false;
 
   // initializing constructor
@@ -46,6 +45,8 @@ class Mainview extends Component {
       format:'',
       disableFormat: true,
       disableDownload: true,
+      downloadBtnProgress: false,
+      isDownloading: false,
       progress:0,
       estTime: 0,
       downloadedSize: 0,
@@ -59,6 +60,8 @@ class Mainview extends Component {
       format:'',
       disableFormat: true,
       disableDownload: true,
+      downloadBtnProgress: false,
+      isDownloading: false,
       progress: 0,
       estTime: 0,
       downloadedSize: 0,
@@ -105,6 +108,9 @@ class Mainview extends Component {
   downloadVideo(){
 
     if(this.validUrl){
+      // showing progress circle besides the download button
+      this.setState({ downloadBtnProgress: true })
+
       // local variable to store download start time
       let starttime;
 
@@ -114,7 +120,7 @@ class Mainview extends Component {
       // this will fire when downloading started
       this.video.once('response', () => {
         starttime = Date.now();
-        this.isDownloading = true;
+        this.setState({ isDownloading: true, downloadBtnProgress: false })
       });
 
       // getting progress of the downloading video
@@ -142,7 +148,7 @@ class Mainview extends Component {
 
       // this will fire when downloading is finished
       this.video.on('end', () => {
-        this.isDownloading = false
+        this.setState({ isDownloading: false })
         if(this.state.progress == 100){
           this.snack = true
         }
@@ -193,10 +199,11 @@ class Mainview extends Component {
                 <option value="mp4">.mp4</option>
               </Form.Control>
               <Button className="btnDownload" variant="contained" color="primary" size="small" type="button" onClick={() => this.downloadVideo()} disabled={this.state.disableDownload} > <FontAwesomeIcon icon={faDownload} />&nbsp; Download</Button> &nbsp;
+              {this.state.downloadBtnProgress && <CircularProgress style={{ height:"29px", width:"29px" }} />}
             </div>
           </div>
 
-          {this.isDownloading &&
+          {this.state.isDownloading &&
           <CardActions style={{ textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
             <p className="progress">Downloading {this.state.downloadedSize}MB/{this.state.totalSize}MB</p>
 
