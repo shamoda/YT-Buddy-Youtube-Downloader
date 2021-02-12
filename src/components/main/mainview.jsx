@@ -23,6 +23,7 @@ import { Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import '../../App.global.css'
+import { clipboard } from 'electron';
 
     // added functionalities to the paste button
 
@@ -79,6 +80,19 @@ class Mainview extends Component {
     });
   };
 
+  // paste url from clipboard
+  // only valid URLs will be displayed
+  pasteFromClipboard() {
+    this.setState({
+      urlTxt: clipboard.readText()
+    }, function() {
+      this.validateInputs()
+    })
+  }
+
+  // validate url and file format
+  // enable format selector and download button
+  // initialize path and readable stream objects
   validateInputs() {
     // validating the url
     if(ytdl.validateURL(this.state.urlTxt))
@@ -191,7 +205,7 @@ class Mainview extends Component {
 
             <div style={{ textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
               <input className="url" type="text"  placeholder="Paste URL Here" onChange={this.inputChange} name="urlTxt" value={this.state.urlTxt} /> &nbsp;
-              <Button className="btnDownload" variant="contained" size="small" type="button" style={{ color:"white", background:"green" }} > <FontAwesomeIcon icon={faEdit} />&nbsp; Paste</Button> &nbsp;
+              <Button className="btnDownload" variant="contained" size="small" type="button" style={{ color:"white", background:"green" }} onClick={() => this.pasteFromClipboard()} > <FontAwesomeIcon icon={faEdit} />&nbsp; Paste</Button> &nbsp;
               <Form.Control className="fileFormat" as="select" placeholder="Select Format" value={this.state.format} onChange={this.inputChange} name="format" disabled={this.state.disableFormat} >
                 {/* {this.state.optionList} */}
                 <option value="" disabled hidden>- format -</option>
