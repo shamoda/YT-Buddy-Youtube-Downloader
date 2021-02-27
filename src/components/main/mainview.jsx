@@ -26,6 +26,8 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import '../../App.global.css'
 import { clipboard } from 'electron';
 
+const { dialog } = require('electron').remote
+
     // added functionalities to the paste button
 
     // https://www.youtube.com/watch?v=a3ICNMQW7Ok
@@ -55,6 +57,7 @@ class Mainview extends Component {
       totalSize: 0,
       anchorEl: null
     }
+    this.getPath = this.getPath.bind(this);
   }
 
   downloadInitialState() {
@@ -213,6 +216,22 @@ class Mainview extends Component {
     })
   };
 
+  // set download folder path
+  getPath() {
+    dialog.showOpenDialog({
+      // title: 'YT-Buddy Download Location',
+      // buttonLabel: 'Download here',
+      properties: ['openDirectory']
+    }).then(result => {
+      const folderPath = result.filePaths[0];
+      console.log(result.canceled)
+      console.log(folderPath)
+      return folderPath;
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+
 
 
   render() {
@@ -223,8 +242,8 @@ class Mainview extends Component {
           <div style={{ position: 'absolute', right: 0 }}>
             <IconButton className="btnDownload" onClick={this.handleClick}> <MoreVertIcon /> </IconButton>
             <Menu anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={this.handleClose} >
-              <MenuItem onClick={this.handleClose}> <FontAwesomeIcon icon={faFolderOpen} />&nbsp; Set Path</MenuItem>
-              <MenuItem onClick={this.handleClose}> <FontAwesomeIcon icon={faDownload} />&nbsp; Downloads</MenuItem>
+              <MenuItem onClick={this.getPath}> <FontAwesomeIcon icon={faFolderOpen} />&nbsp; Select Folder</MenuItem>
+              <MenuItem onClick={this.handleClose}> <FontAwesomeIcon icon={faDownload} />&nbsp; My Downloads</MenuItem>
             </Menu>
           </div>
 
