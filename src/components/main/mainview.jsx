@@ -17,11 +17,12 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import ytdl from 'ytdl-core';
-import { Button, Card, CardActions, CircularProgress, IconButton, LinearProgress, Snackbar } from '@material-ui/core';
+import { Button, Card, CardActions, CircularProgress, IconButton, LinearProgress, Snackbar, Menu, MenuItem } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 import { Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faEdit, faFolderOpen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import '../../App.global.css'
 import { clipboard } from 'electron';
 
@@ -51,7 +52,8 @@ class Mainview extends Component {
       progress:0,
       estTime: 0,
       downloadedSize: 0,
-      totalSize: 0
+      totalSize: 0,
+      anchorEl: null
     }
   }
 
@@ -123,7 +125,12 @@ class Mainview extends Component {
 
     if(this.validUrl){
       // showing progress circle besides the download button
-      this.setState({ downloadBtnProgress: true })
+      // disable download and format buttons
+      this.setState({
+        downloadBtnProgress: true,
+        disableDownload: true,
+        disableFormat: true
+      })
 
       // local variable to store download start time
       let starttime;
@@ -194,12 +201,33 @@ class Mainview extends Component {
     }
   }
 
+  handleClick = (event) => {
+    this.setState({
+      anchorEl: event.currentTarget
+    })
+  };
+
+  handleClose = () => {
+    this.setState({
+      anchorEl: null
+    })
+  };
+
 
 
   render() {
     return (
       <div>
         <Card>
+          {/* settings menu  */}
+          <div style={{ position: 'absolute', right: 0 }}>
+            <IconButton className="btnDownload" onClick={this.handleClick}> <MoreVertIcon /> </IconButton>
+            <Menu anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={this.handleClose} >
+              <MenuItem onClick={this.handleClose}> <FontAwesomeIcon icon={faFolderOpen} />&nbsp; Set Path</MenuItem>
+              <MenuItem onClick={this.handleClose}> <FontAwesomeIcon icon={faDownload} />&nbsp; Downloads</MenuItem>
+            </Menu>
+          </div>
+
           <div style={{ padding: "10px", background: "", display: "flex", alignContent: "center", alignItems: "center" }}>
             {/* <Image src={logo} width="82px" height="33px" style={{ padding: "10px" }} /> */}
 
