@@ -28,7 +28,8 @@ import { clipboard } from 'electron';
 
 const { dialog } = require('electron').remote
 
-    // added functionalities to the paste button
+    // store download path in a flat file
+    // when component did mount replace back slashes with forward slashes
 
     // https://www.youtube.com/watch?v=a3ICNMQW7Ok
 
@@ -112,7 +113,7 @@ class Mainview extends Component {
       }
       // setting validUrl true
       this.validUrl = true
-      this.output = path.resolve(__dirname, 'video.'+this.state.format);
+      this.output = path.resolve('C:/Users/Shamoda Madushan/Downloads', 'video.'+this.state.format);
       // creating readable stream
       this.video = ytdl(this.state.urlTxt, { format: this.state.format });
       console.log('Valid URL')
@@ -204,12 +205,14 @@ class Mainview extends Component {
     }
   }
 
+  // show menu when user clicks menu button (3 vertical dots)
   handleClick = (event) => {
     this.setState({
       anchorEl: event.currentTarget
     })
   };
 
+  // dismiss menu
   handleClose = () => {
     this.setState({
       anchorEl: null
@@ -218,8 +221,13 @@ class Mainview extends Component {
 
   // set download folder path
   getPath() {
+    // dismiss menu
+    this.setState({
+      anchorEl: null
+    })
+    // open select folder dialog
     dialog.showOpenDialog({
-      // title: 'YT-Buddy Download Location',
+      title: 'YT-Buddy Download Location',
       // buttonLabel: 'Download here',
       properties: ['openDirectory']
     }).then(result => {

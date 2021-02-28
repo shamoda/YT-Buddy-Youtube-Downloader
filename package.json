@@ -267,7 +267,7 @@
     "regenerator-runtime": "^0.13.5",
     "simple-youtube-api": "^5.2.1",
     "source-map-support": "^0.5.19",
-    "ytdl-core": "^4.4.5"
+    "ytdl-core": "^4.5.0"
   },
   "devEngines": {
     "node": ">=10.x",
